@@ -12,7 +12,7 @@ module.exports = {
     .addUserOption((option) =>
       option.setName("target").setDescription("The user to get info about")
     ),
-
+  isPublic: true,
   async execute(interaction) {
     // Get the target user, or default to the user who ran the command
     const targetUser =

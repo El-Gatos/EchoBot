@@ -4,6 +4,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("fox")
     .setDescription("Replies with a random fox picture!"),
+  isPublic: true,
   async execute(interaction) {
     try {
       // Make a request to the RandomFox API

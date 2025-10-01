@@ -12,7 +12,7 @@ module.exports = {
     .addStringOption((option) =>
       option.setName("status").setDescription("The reason you are AFK")
     ),
-
+  isPublic: true,
   async execute(interaction) {
     const status =
       interaction.options.getString("status") || "No status provided";

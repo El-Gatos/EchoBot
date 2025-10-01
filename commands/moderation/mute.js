@@ -45,7 +45,7 @@ module.exports = {
       option.setName("reason").setDescription("The reason for the mute")
     )
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ModerateMembers),
-
+  isPublic: true,
   async execute(interaction) {
     const targetUser = interaction.options.getUser("target");
     const durationString = interaction.options.getString("duration");

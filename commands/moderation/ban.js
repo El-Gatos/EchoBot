@@ -20,7 +20,7 @@ module.exports = {
       option.setName("reason").setDescription("The reason for the ban")
     )
     .setDefaultMemberPermissions(PermissionsBitField.Flags.BanMembers),
-
+  isPublic: true,
   async execute(interaction) {
     const targetUser = interaction.options.getUser("target");
     const reason =

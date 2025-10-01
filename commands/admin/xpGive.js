@@ -4,71 +4,77 @@ const {
   EmbedBuilder,
   InteractionContextType,
 } = require("discord.js");
-
-// --- CORRECTED LEVEL CALCULATION FUNCTION ---
-function calculateLevel(xp) {
-  let level = 0;
-  let cumulativeXp = 0;
-  while (true) {
-    const xpForNextLevel = 5 * level ** 2 + 50 * level + 100;
-    cumulativeXp += xpForNextLevel;
-    if (xp < cumulativeXp) {
-      return level;
-    }
-    level++;
-  }
-}
+const { getXpForLevel } = require("../../utils/levelingUtil.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("xpset")
-    .setDescription("Sets a user's XP and recalculates their level.")
+    .setName("xpgive")
+    .setDescription("Gives a user a specified amount of XP.")
     .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageGuild)
     .addUserOption((option) =>
       option
         .setName("user")
-        .setDescription("The user to modify")
+        .setDescription("The user to give XP to")
         .setRequired(true)
     )
     .addIntegerOption((option) =>
       option
-        .setName("xp")
-        .setDescription("The total amount of XP to set")
+        .setName("amount")
+        .setDescription("The amount of XP to give")
         .setRequired(true)
-        .setMinValue(0)
+        .setMinValue(1)
     ),
 
   async execute(interaction) {
     const targetUser = interaction.options.getUser("user");
-    const newXp = interaction.options.getInteger("xp");
+    const amount = interaction.options.getInteger("amount");
     const db = interaction.client.db;
-
-    const newLevel = calculateLevel(newXp);
 
     const userRef = db
       .collection("guilds")
       .doc(interaction.guild.id)
       .collection("levels")
       .doc(targetUser.id);
+    const userDoc = await userRef.get();
+
+    const userData = userDoc.data() || { xp: 0, level: 0 };
+    const originalLevel = userData.level;
+
+    const newXp = userData.xp + amount;
+    let newLevel = originalLevel;
+
+    // --- Level-Up Check ---
+    // Keep leveling up until the user's XP is no longer enough for the next level
+    while (newXp >= getXpForLevel(newLevel + 1)) {
+      newLevel++;
+    }
 
     await userRef.set(
       {
         xp: newXp,
         level: newLevel,
-        lastMessage: Date.now(),
       },
       { merge: true }
     );
 
     const embed = new EmbedBuilder()
       .setColor("Green")
-      .setTitle("User XP Updated")
-      .setDescription(`Successfully updated **${targetUser.tag}**'s stats.`)
+      .setTitle("User XP Awarded")
+      .setDescription(
+        `Successfully gave **${amount} XP** to **${targetUser.tag}**.`
+      )
       .addFields(
         { name: "New Level", value: newLevel.toString(), inline: true },
         { name: "New Total XP", value: newXp.toString(), inline: true }
       );
+
+    if (newLevel > originalLevel) {
+      embed.addFields({
+        name: "Level Up!",
+        value: `Level ${originalLevel}  ->  Level ${newLevel}`,
+      });
+    }
 
     await interaction.editReply({ embeds: [embed] });
   },

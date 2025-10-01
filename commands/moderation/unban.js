@@ -2,14 +2,12 @@ const {
   SlashCommandBuilder,
   PermissionsBitField,
   EmbedBuilder,
-  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("unban")
     .setDescription("Unbans a user from the server.")
-    .setContexts(InteractionContextType.Guild)
     .addStringOption((option) =>
       option
         .setName("userid")
@@ -17,13 +15,19 @@ module.exports = {
         .setRequired(true)
     )
     .setDefaultMemberPermissions(PermissionsBitField.Flags.BanMembers),
-
+  isPublic: true,
   async execute(interaction) {
     const userId = interaction.options.getString("userid");
 
     try {
-      // Fetch the user to confirm they exist
-      const bannedUser = await interaction.client.users.fetch(userId);
+      // --- NEW: Check if the user is actually banned ---
+      const banList = await interaction.guild.bans.fetch();
+      const bannedUser = banList.get(userId);
+
+      if (!bannedUser) {
+        return interaction.editReply("That user is not on the ban list.");
+      }
+      // --- END OF NEW CODE ---
 
       // Attempt to unban the user
       await interaction.guild.bans.remove(userId);
@@ -32,7 +36,7 @@ module.exports = {
         .setColor("Green")
         .setTitle("User Unbanned")
         .setDescription(
-          `Successfully unbanned **${bannedUser.tag}** (ID: ${userId}).`
+          `Successfully unbanned **${bannedUser.user.tag}** (ID: ${userId}).`
         )
         .setTimestamp();
 
@@ -40,7 +44,7 @@ module.exports = {
     } catch (error) {
       console.error(error);
       await interaction.editReply(
-        "Could not unban the user. Make sure you've provided a valid User ID and that the user is actually banned."
+        "An error occurred. I may be missing permissions to fetch the ban list or unban members."
       );
     }
   },

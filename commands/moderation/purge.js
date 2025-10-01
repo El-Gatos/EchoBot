@@ -9,17 +9,17 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("purge")
     .setDescription("Deletes a specified number of messages from the channel.")
+    .setContexts(InteractionContextType.Guild)
     .addIntegerOption((option) =>
       option
         .setName("amount")
         .setDescription("The number of messages to delete (1-99)")
-        .setContexts(InteractionContextType.Guild)
         .setRequired(true)
         .setMinValue(1)
         .setMaxValue(99)
     )
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageMessages),
-
+  isPublic: true,
   async execute(interaction) {
     if (
       !interaction.member.permissions.has(

@@ -5,7 +5,6 @@ const {
   ButtonBuilder,
   ButtonStyle,
   InteractionContextType,
-  PermissionsBitField,
 } = require("discord.js");
 
 // --- Game Logic ---
@@ -51,7 +50,7 @@ module.exports = {
             .setRequired(true)
         )
     ),
-
+  isPublic: true,
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
 

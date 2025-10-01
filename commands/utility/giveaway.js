@@ -6,7 +6,7 @@ const {
   InteractionContextType,
 } = require("discord.js");
 const ms = require("ms");
-const { endGiveaway } = require("../../utils/giveawayManager"); // Import our new function
+const { endGiveaway } = require("../../utils/giveawayManager");
 
 module.exports = {
   data: new SlashCommandBuilder()

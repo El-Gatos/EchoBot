@@ -9,6 +9,7 @@ module.exports = {
     .setName("leaderboard")
     .setDescription("Displays the server's XP leaderboard.")
     .setContexts(InteractionContextType.Guild),
+  isPublic: true,
   async execute(interaction) {
     const db = interaction.client.db;
     const guildId = interaction.guild.id;

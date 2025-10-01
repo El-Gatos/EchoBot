@@ -17,7 +17,7 @@ module.exports = {
         .setMinValue(1)
         .setMaxValue(10)
     ),
-
+  isPublic: true,
   async execute(interaction) {
     // Override the default ephemeral defer. This reply WILL be public.
     await interaction.deferReply();

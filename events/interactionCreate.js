@@ -35,10 +35,11 @@ module.exports = {
       }
 
       try {
-        // Defer the reply for all slash commands unless the command does it itself
-        // Snipe command is public, so it defers itself.
-        if (interaction.commandName !== "snipe") {
-          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        // Check for the new isPublic property
+        if (command.isPublic) {
+          await interaction.deferReply(); // Defer publicly
+        } else {
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral }); // Defer ephemerally (default)
         }
 
         await command.execute(interaction);

@@ -21,6 +21,7 @@ module.exports = {
     .addUserOption((option) =>
       option.setName("user").setDescription("The user to check the rank of")
     ),
+  isPublic: true,
   async execute(interaction) {
     const targetUser = interaction.options.getUser("user") || interaction.user;
     const db = interaction.client.db;

@@ -2,8 +2,6 @@
 
 const { Events, EmbedBuilder } = require("discord.js");
 
-// --- NEW CODE - LEVELING SYSTEM ---
-// This entire function definition goes at the top of the file.
 async function handleLeveling(message) {
   const db = message.client.db;
   const guildId = message.guild.id;
@@ -25,47 +23,45 @@ async function handleLeveling(message) {
   const userDoc = await userRef.get();
   const now = Date.now();
 
-  // --- CORRECTED LOGIC ---
+  const xpGained = Math.floor(Math.random() * 10) + 15;
+
   if (!userDoc.exists) {
-    // This is the user's first message
-    const initialXp = Math.floor(Math.random() * 10) + 15; // 15-24 XP
-    await userRef.set({ xp: initialXp, level: 0, lastMessage: now });
-    return; // We're done, exit the function
-  } else {
-    // This is an existing user
-    const userData = userDoc.data();
-    const cooldown = 3 * 1000; // 1 minute cooldown
+    await userRef.set({ xp: xpGained, level: 0, lastMessage: now });
+    return;
+  }
 
-    if (now - userData.lastMessage < cooldown) return; // Still in cooldown
+  const userData = userDoc.data();
+  const cooldown = 60 * 1000;
+  if (now - userData.lastMessage < cooldown) return;
 
-    const newXp = userData.xp + Math.floor(Math.random() * 10) + 15;
-    const xpToNextLevel = 5 * userData.level ** 2 + 50 * userData.level + 100;
-    let newLevel = userData.level;
+  const newXp = userData.xp + xpGained;
+  let newLevel = userData.level;
 
-    if (newXp >= xpToNextLevel) {
-      newLevel++;
-      const channelId = configDoc.data().channelId;
-      if (channelId) {
-        const channel = await message.guild.channels
-          .fetch(channelId)
-          .catch(() => null);
-        if (channel) {
-          const levelUpEmbed = new EmbedBuilder()
-            .setColor("Gold")
-            .setDescription(
-              `🎉 Congratulations, ${message.author}! You have reached **Level ${newLevel}**!`
-            );
-          channel.send({ embeds: [levelUpEmbed] });
-        }
+  // --- CORRECTED LEVEL-UP CHECK ---
+  const xpNeededForNextLevel = getXpForLevel(newLevel + 1);
+  if (newXp >= xpNeededForNextLevel) {
+    newLevel++;
+    const channelId = configDoc.data().channelId;
+    if (channelId) {
+      const channel = await message.guild.channels
+        .fetch(channelId)
+        .catch(() => null);
+      if (channel) {
+        const levelUpEmbed = new EmbedBuilder()
+          .setColor("Gold")
+          .setDescription(
+            `🎉 Congratulations, ${message.author}! You have reached **Level ${newLevel}**!`
+          );
+        channel.send({ embeds: [levelUpEmbed] });
       }
     }
-
-    await userRef.update({
-      xp: newXp,
-      level: newLevel,
-      lastMessage: now,
-    });
   }
+
+  await userRef.update({
+    xp: newXp,
+    level: newLevel,
+    lastMessage: now,
+  });
 }
 
 // --- MAIN EVENT EXPORT ---

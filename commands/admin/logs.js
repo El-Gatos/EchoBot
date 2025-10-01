@@ -3,13 +3,14 @@ const {
   PermissionsBitField,
   ChannelType,
   EmbedBuilder,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("logs")
     .setDescription("Configures the server logging system.")
+    .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(
       PermissionsBitField.Flags.ManageGuild |
         PermissionsBitField.Flags.Administrator

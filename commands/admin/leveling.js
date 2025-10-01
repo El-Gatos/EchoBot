@@ -3,13 +3,14 @@ const {
   PermissionsBitField,
   ChannelType,
   EmbedBuilder,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("leveling")
     .setDescription("Configures the server leveling system.")
+    .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageGuild)
     .addSubcommand((subcommand) =>
       subcommand

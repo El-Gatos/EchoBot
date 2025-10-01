@@ -1,14 +1,14 @@
 const {
   SlashCommandBuilder,
   EmbedBuilder,
-  PermissionsBitField,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("afk")
     .setDescription("Sets your status to AFK.")
+    .setContexts(InteractionContextType.Guild)
     .addStringOption((option) =>
       option.setName("status").setDescription("The reason you are AFK")
     ),

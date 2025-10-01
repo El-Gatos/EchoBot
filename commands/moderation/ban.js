@@ -2,13 +2,14 @@ const {
   SlashCommandBuilder,
   PermissionsBitField,
   EmbedBuilder,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("ban")
     .setDescription("Bans a member from the server.")
+    .setContexts(InteractionContextType.Guild)
     .addUserOption((option) =>
       option
         .setName("target")

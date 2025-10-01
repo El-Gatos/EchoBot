@@ -1,10 +1,14 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  InteractionContextType,
+} = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("userinfo")
     .setDescription("Provides information about the user.")
-    // Add a user option to the command
+    .setContexts(InteractionContextType.Guild)
     .addUserOption((option) =>
       option.setName("target").setDescription("The user to get info about")
     ),

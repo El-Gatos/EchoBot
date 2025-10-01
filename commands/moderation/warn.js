@@ -2,13 +2,14 @@ const {
   SlashCommandBuilder,
   PermissionsBitField,
   EmbedBuilder,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("warn")
     .setDescription("Warns a member and logs the warning.")
+    .setContexts(InteractionContextType.Guild)
     .addUserOption((option) =>
       option
         .setName("target")

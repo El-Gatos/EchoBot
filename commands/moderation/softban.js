@@ -2,13 +2,14 @@ const {
   SlashCommandBuilder,
   PermissionsBitField,
   EmbedBuilder,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("softban")
     .setDescription("Kicks a user and deletes their recent messages.")
+    .setContexts(InteractionContextType.Guild)
     .addUserOption((option) =>
       option
         .setName("target")

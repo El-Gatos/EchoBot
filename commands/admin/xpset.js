@@ -2,27 +2,28 @@ const {
   SlashCommandBuilder,
   PermissionsBitField,
   EmbedBuilder,
+  InteractionContextType,
 } = require("discord.js");
 
-// This function calculates the level based on total XP.
-// It's the reverse of our XP-to-next-level formula.
+// --- CORRECTED LEVEL CALCULATION FUNCTION ---
 function calculateLevel(xp) {
   let level = 0;
-  let requiredXp = 100;
-  let totalXpForNextLevel = 100;
-
-  while (xp >= totalXpForNextLevel) {
+  let cumulativeXp = 0;
+  while (true) {
+    const xpForNextLevel = 5 * level ** 2 + 50 * level + 100;
+    cumulativeXp += xpForNextLevel;
+    if (xp < cumulativeXp) {
+      return level;
+    }
     level++;
-    requiredXp = 5 * level ** 2 + 50 * level + 100;
-    totalXpForNextLevel += requiredXp;
   }
-  return level;
 }
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("xpset")
     .setDescription("Sets a user's XP and recalculates their level.")
+    .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageGuild)
     .addUserOption((option) =>
       option
@@ -43,7 +44,6 @@ module.exports = {
     const newXp = interaction.options.getInteger("xp");
     const db = interaction.client.db;
 
-    // Calculate the new level based on the provided XP
     const newLevel = calculateLevel(newXp);
 
     const userRef = db
@@ -56,6 +56,7 @@ module.exports = {
       {
         xp: newXp,
         level: newLevel,
+        lastMessage: Date.now(),
       },
       { merge: true }
     );

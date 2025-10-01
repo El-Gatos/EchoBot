@@ -2,13 +2,14 @@ const {
   SlashCommandBuilder,
   PermissionsBitField,
   EmbedBuilder,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("autorole")
     .setDescription("Configures the autorole system.")
+    .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageRoles)
     .addSubcommand((subcommand) =>
       subcommand

@@ -1,9 +1,23 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  InteractionContextType,
+} = require("discord.js");
+
+// Helper function to get the TOTAL XP needed to reach a certain level
+function getXpForLevel(level) {
+  let totalXp = 0;
+  for (let i = 0; i < level; i++) {
+    totalXp += 5 * i ** 2 + 50 * i + 100;
+  }
+  return totalXp;
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("rank")
     .setDescription("Displays your or another user's server rank.")
+    .setContexts(InteractionContextType.Guild)
     .addUserOption((option) =>
       option.setName("user").setDescription("The user to check the rank of")
     ),
@@ -26,7 +40,14 @@ module.exports = {
     }
 
     const userData = userDoc.data();
-    const xpToNextLevel = 5 * userData.level ** 2 + 50 * userData.level + 100;
+
+    // --- CORRECTED DISPLAY LOGIC ---
+    const xpForCurrentLevel = getXpForLevel(userData.level);
+    const xpForNextLevel = getXpForLevel(userData.level + 1);
+
+    const xpInCurrentLevel = userData.xp - xpForCurrentLevel;
+    const xpNeededForLevelUp = xpForNextLevel - xpForCurrentLevel;
+    // --- END OF CHANGES ---
 
     // Fetch all users to determine rank
     const allUsersSnapshot = await db
@@ -49,7 +70,7 @@ module.exports = {
         { name: "Level", value: userData.level.toString(), inline: true },
         {
           name: "XP",
-          value: `${userData.xp} / ${xpToNextLevel}`,
+          value: `${xpInCurrentLevel} / ${xpNeededForLevelUp}`,
           inline: true,
         },
         { name: "Rank", value: `#${rank}`, inline: true }

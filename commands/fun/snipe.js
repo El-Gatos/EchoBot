@@ -2,12 +2,14 @@ const {
   SlashCommandBuilder,
   EmbedBuilder,
   ChannelType,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("snipe")
     .setDescription("Reveals the most recently deleted message in a channel.")
+    .setContexts(InteractionContextType.Guild)
     .addIntegerOption((option) =>
       option
         .setName("position")

@@ -2,7 +2,7 @@ const {
   SlashCommandBuilder,
   PermissionsBitField,
   EmbedBuilder,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 // Helper function to parse time strings (e.g., "10m", "1h", "1d") into milliseconds
@@ -28,6 +28,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("mute")
     .setDescription("Mutes a member, preventing them from talking.")
+    .setContexts(InteractionContextType.Guild)
     .addUserOption((option) =>
       option
         .setName("target")

@@ -1,5 +1,5 @@
 const { Events, EmbedBuilder } = require("discord.js");
-const { antiRaid } = require("../config.json"); // Note the path change to ../
+const { antiRaid } = require("../config.json");
 const recentJoins = new Map();
 const lockdownActive = new Set();
 
@@ -86,7 +86,6 @@ module.exports = {
 
     await handleAutorole(member);
 
-    // All of your anti-raid logic goes here...
     if (!antiRaid.enabled || member.guild.id !== antiRaid.guildId) return;
 
     const guildId = member.guild.id;

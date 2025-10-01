@@ -3,13 +3,14 @@ const {
   PermissionsBitField,
   EmbedBuilder,
   ChannelType,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("unlock")
     .setDescription("Unlocks a channel, allowing members to send messages.")
+    .setContexts(InteractionContextType.Guild)
     .addChannelOption((option) =>
       option
         .setName("channel")

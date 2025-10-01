@@ -2,13 +2,14 @@ const {
   SlashCommandBuilder,
   PermissionsBitField,
   EmbedBuilder,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("unban")
     .setDescription("Unbans a user from the server.")
+    .setContexts(InteractionContextType.Guild)
     .addStringOption((option) =>
       option
         .setName("userid")

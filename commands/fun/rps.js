@@ -4,7 +4,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  MessageFlags,
+  InteractionContextType,
   PermissionsBitField,
 } = require("discord.js");
 
@@ -25,6 +25,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("rps")
     .setDescription("Play a game of crazy Rock, Paper, Scissors.")
+    .setContexts(InteractionContextType.Guild)
     .addSubcommand((subcommand) =>
       subcommand
         .setName("play")

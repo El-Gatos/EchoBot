@@ -3,7 +3,7 @@ const {
   PermissionsBitField,
   ChannelType,
   EmbedBuilder,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 const ms = require("ms");
 const { endGiveaway } = require("../../utils/giveawayManager"); // Import our new function
@@ -12,6 +12,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("giveaway")
     .setDescription("Manages the giveaway system.")
+    .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageGuild)
     .addSubcommand((subcommand) =>
       subcommand

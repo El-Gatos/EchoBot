@@ -2,8 +2,9 @@ const {
   SlashCommandBuilder,
   PermissionsBitField,
   MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
-
+//Recheck for message flags -- global scoped ephemeral
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("purge")
@@ -12,6 +13,7 @@ module.exports = {
       option
         .setName("amount")
         .setDescription("The number of messages to delete (1-99)")
+        .setContexts(InteractionContextType.Guild)
         .setRequired(true)
         .setMinValue(1)
         .setMaxValue(99)
@@ -19,13 +21,11 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageMessages),
 
   async execute(interaction) {
-    // This permission check is redundant but good practice
     if (
       !interaction.member.permissions.has(
         PermissionsBitField.Flags.ManageMessages
       )
     ) {
-      // This reply's ephemeral status is now set with a flag
       return interaction.editReply({
         content: "You do not have permission to use this command.",
         flags: MessageFlags.Ephemeral,

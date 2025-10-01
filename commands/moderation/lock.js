@@ -3,7 +3,7 @@ const {
   PermissionsBitField,
   EmbedBuilder,
   ChannelType,
-  MessageFlags,
+  InteractionContextType,
 } = require("discord.js");
 
 module.exports = {
@@ -12,6 +12,7 @@ module.exports = {
     .setDescription(
       "Locks a channel, preventing members from sending messages."
     )
+    .setContexts(InteractionContextType.Guild)
     .addChannelOption((option) =>
       option
         .setName("channel")

@@ -1,9 +1,14 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  InteractionContextType,
+} = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("leaderboard")
-    .setDescription("Displays the server's XP leaderboard."),
+    .setDescription("Displays the server's XP leaderboard.")
+    .setContexts(InteractionContextType.Guild),
   async execute(interaction) {
     const db = interaction.client.db;
     const guildId = interaction.guild.id;

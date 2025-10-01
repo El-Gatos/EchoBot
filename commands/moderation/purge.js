@@ -1,10 +1,9 @@
 const {
   SlashCommandBuilder,
   PermissionsBitField,
-  MessageFlags,
   InteractionContextType,
 } = require("discord.js");
-//Recheck for message flags -- global scoped ephemeral
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("purge")
@@ -21,6 +20,7 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageMessages),
   isPublic: true,
   async execute(interaction) {
+    // Permission check
     if (
       !interaction.member.permissions.has(
         PermissionsBitField.Flags.ManageMessages
@@ -28,26 +28,29 @@ module.exports = {
     ) {
       return interaction.editReply({
         content: "You do not have permission to use this command.",
-        flags: MessageFlags.Ephemeral,
       });
     }
 
     const amount = interaction.options.getInteger("amount");
 
     try {
-      // Fetch and delete messages
       const fetched = await interaction.channel.messages.fetch({
         limit: amount,
       });
-      await interaction.channel.bulkDelete(fetched);
+
+      const deletedMessages = await interaction.channel.bulkDelete(
+        fetched,
+        true
+      );
 
       await interaction.editReply({
-        content: `Successfully deleted ${fetched.size} messages.`,
+        content: `Successfully deleted ${deletedMessages.size} messages.`,
       });
     } catch (error) {
       console.error(error);
       await interaction.editReply({
-        content: "There was an error trying to purge messages in this channel!",
+        content:
+          "An error occurred. I may not have permissions to delete messages in this channel.",
       });
     }
   },

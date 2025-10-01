@@ -31,8 +31,6 @@ module.exports = {
     const reason =
       interaction.options.getString("reason") || "No reason provided";
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     // Check if the channel is already locked
     const everyoneRole = interaction.guild.roles.everyone;
     const perms = channel.permissionsFor(everyoneRole);

@@ -25,8 +25,6 @@ module.exports = {
     const reason =
       interaction.options.getString("reason") || "No reason provided";
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     // Fetch the member from the guild
     const targetMember = await interaction.guild.members.fetch(targetUser.id);
 

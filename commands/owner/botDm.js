@@ -25,13 +25,11 @@ module.exports = {
   async execute(interaction) {
     // --- Owner Check ---
     if (interaction.user.id !== ownerId) {
-      return interaction.reply({
+      return interaction.editReply({
         content: "This command is reserved for the bot owner.",
         flags: MessageFlags.Ephemeral,
       });
     }
-
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const targetUser = interaction.options.getUser("target");
     const messageContent = interaction.options.getString("message");

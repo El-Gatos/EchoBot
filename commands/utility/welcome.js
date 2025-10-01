@@ -69,8 +69,6 @@ module.exports = {
       .collection("config")
       .doc("welcome");
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     switch (subcommand) {
       case "enable":
         await configRef.set({ enabled: true }, { merge: true });

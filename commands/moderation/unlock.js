@@ -22,8 +22,6 @@ module.exports = {
     const channel =
       interaction.options.getChannel("channel") || interaction.channel;
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     // Check if the channel is already unlocked
     const everyoneRole = interaction.guild.roles.everyone;
     const perms = channel.permissionsFor(everyoneRole);

@@ -1,15 +1,11 @@
-const {
-  SlashCommandBuilder,
-  MessageFlags,
-  PermissionFlagsBits,
-} = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const { ownerId } = require("../../config.json");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("reload")
     .setDescription("[Owner Only] Reloads a command.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    // REMOVED: .setDefaultMemberPermissions() is not needed for owner commands.
     .addStringOption((option) =>
       option
         .setName("command")
@@ -19,9 +15,9 @@ module.exports = {
   async execute(interaction) {
     // --- Owner Check ---
     if (interaction.user.id !== ownerId) {
-      return interaction.reply({
+      // CHANGED: reply -> editReply, removed flags
+      return interaction.editReply({
         content: "This command is reserved for the bot owner.",
-        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -31,9 +27,9 @@ module.exports = {
     const command = interaction.client.commands.get(commandName);
 
     if (!command) {
-      return interaction.reply({
+      // CHANGED: reply -> editReply, removed flags
+      return interaction.editReply({
         content: `There is no command with name \`${commandName}\`!`,
-        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -50,15 +46,15 @@ module.exports = {
       // Don't forget to re-attach the filePath for future reloads
       newCommand.filePath = command.filePath;
 
-      await interaction.reply({
+      // CHANGED: reply -> editReply, removed flags
+      await interaction.editReply({
         content: `Command \`${newCommand.data.name}\` was reloaded successfully!`,
-        flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
       console.error(error);
-      await interaction.reply({
+      // CHANGED: reply -> editReply, removed flags
+      await interaction.editReply({
         content: `There was an error while reloading a command \`${command.data.name}\`:\n\`${error.message}\``,
-        flags: MessageFlags.Ephemeral,
       });
     }
   },

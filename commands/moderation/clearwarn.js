@@ -20,8 +20,6 @@ module.exports = {
     const targetUser = interaction.options.getUser("target");
     const db = interaction.client.db;
 
-    await interaction.deferReply({ ephemeral: true });
-
     const userWarningsRef = db
       .collection("guilds")
       .doc(interaction.guild.id)

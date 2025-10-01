@@ -20,8 +20,6 @@ module.exports = {
   async execute(interaction) {
     const userId = interaction.options.getString("userid");
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     try {
       // Fetch the user to confirm they exist
       const bannedUser = await interaction.client.users.fetch(userId);

@@ -21,8 +21,6 @@ module.exports = {
     const targetUser = interaction.options.getUser("target");
     const db = interaction.client.db;
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     const userWarningsRef = db
       .collection("guilds")
       .doc(interaction.guild.id)

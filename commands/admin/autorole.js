@@ -47,8 +47,6 @@ module.exports = {
       .collection("config")
       .doc("autorole");
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     switch (subcommand) {
       case "enable":
         await configRef.set({ enabled: true }, { merge: true });

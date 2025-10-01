@@ -5,8 +5,6 @@ module.exports = {
     .setName("ping")
     .setDescription("Replies with Pong! and shows latency."),
   async execute(interaction) {
-    await interaction.deferReply();
-
     const apiLatency = Date.now() - interaction.createdTimestamp;
 
     const websocketPing = interaction.client.ws.ping;

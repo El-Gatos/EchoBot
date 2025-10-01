@@ -7,8 +7,6 @@ module.exports = {
   async execute(interaction) {
     // We'll use a try...catch block to handle potential errors
     try {
-      await interaction.deferReply();
-
       // Make a request to the RandomFox API
       const response = await fetch("https://randomfox.ca/floof/");
       const data = await response.json(); // Parse the JSON response

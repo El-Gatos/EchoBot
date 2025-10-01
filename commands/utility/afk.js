@@ -23,8 +23,6 @@ module.exports = {
       .collection("afkUsers")
       .doc(interaction.user.id);
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     // --- Save AFK status to database ---
     await afkRef.set({
       status: status,

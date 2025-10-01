@@ -51,8 +51,6 @@ module.exports = {
     const reason =
       interaction.options.getString("reason") || "No reason provided";
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     const targetMember = await interaction.guild.members.fetch(targetUser.id);
     const durationMs = parseTime(durationString);
     const maxTimeoutMs = 28 * 24 * 60 * 60 * 1000; // 28 days in milliseconds

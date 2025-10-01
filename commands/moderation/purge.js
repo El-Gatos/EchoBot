@@ -26,16 +26,13 @@ module.exports = {
       )
     ) {
       // This reply's ephemeral status is now set with a flag
-      return interaction.reply({
+      return interaction.editReply({
         content: "You do not have permission to use this command.",
         flags: MessageFlags.Ephemeral,
       });
     }
 
     const amount = interaction.options.getInteger("amount");
-
-    // Defer the reply with an ephemeral flag
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       // Fetch and delete messages
@@ -44,7 +41,6 @@ module.exports = {
       });
       await interaction.channel.bulkDelete(fetched);
 
-      // editReply does not need flags; it respects the original reply's state
       await interaction.editReply({
         content: `Successfully deleted ${fetched.size} messages.`,
       });

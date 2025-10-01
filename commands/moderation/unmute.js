@@ -21,8 +21,6 @@ module.exports = {
     const targetUser = interaction.options.getUser("target");
     const reason = `Unmuted by ${interaction.user.tag}`;
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     const targetMember = await interaction.guild.members.fetch(targetUser.id);
 
     // --- Validation ---

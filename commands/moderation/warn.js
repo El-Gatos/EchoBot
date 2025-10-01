@@ -28,8 +28,6 @@ module.exports = {
     const reason = interaction.options.getString("reason");
     const db = interaction.client.db;
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     // Generate a unique warning ID (using timestamp for simplicity)
     const warnId = Date.now().toString();
 

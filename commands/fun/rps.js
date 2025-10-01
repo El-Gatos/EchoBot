@@ -78,7 +78,6 @@ module.exports = {
           { name: "Bot", value: botChoice, inline: true }
         );
 
-      // This is a public reply, so we use editReply then followUp
       await interaction.editReply({ embeds: [embed] });
     } else if (subcommand === "challenge") {
       // --- Player vs. Player Logic ---
@@ -215,7 +214,3 @@ async function promptPlayers(client, gameId) {
     }
   }
 }
-
-// In your /events/interactionCreate.js, you'll need to handle the rps-move button
-// This logic is separate because it needs to listen for DMs
-// We'll add this to the interactionCreate event handler.

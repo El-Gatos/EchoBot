@@ -91,7 +91,7 @@ module.exports = {
     const guildId = member.guild.id;
     const client = member.client; // Get the client from the member object
 
-    // Ignore if lockdown is already active for this guild
+    // Ignore if lockdown is already active for guild
     if (lockdownActive.has(guildId)) {
       return;
     }

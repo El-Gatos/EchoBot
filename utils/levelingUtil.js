@@ -1,5 +1,3 @@
-// /utils/levelingUtils.js
-
 // Calculates the XP needed to complete a specific level (e.g., to go from L0 to L1)
 function xpForLevel(level) {
   return 5 * level ** 2 + 50 * level + 100;

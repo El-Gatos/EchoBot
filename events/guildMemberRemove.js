@@ -54,7 +54,6 @@ module.exports = {
       });
       embed.addFields({ name: "Moderator", value: kickLog.executor.tag });
     }
-    // You can add a similar check for AuditLogEvent.MemberBanAdd
 
     logChannel.send({ embeds: [embed] });
   },

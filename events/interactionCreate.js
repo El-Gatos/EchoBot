@@ -104,7 +104,6 @@ module.exports = {
         });
 
         if (Object.keys(game.moves).length === 2) {
-          // ... (rest of the RPS winner logic)
           const [player1Id, player2Id] = game.players;
           const move1 = game.moves[player1Id];
           const move2 = game.moves[player2Id];
@@ -137,7 +136,7 @@ module.exports = {
         }
       }
 
-      // --- XP Reset Confirmation Button Logic (CORRECTED) ---
+      // --- XP Reset Confirmation Button Logic ---
       else if (interaction.customId.startsWith("xpreset_")) {
         if (
           !interaction.member.permissions.has(

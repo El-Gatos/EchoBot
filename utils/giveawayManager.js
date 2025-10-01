@@ -1,4 +1,3 @@
-// /utils/giveawayManager.js
 const { EmbedBuilder } = require("discord.js");
 
 async function endGiveaway(client, giveawayDoc) {

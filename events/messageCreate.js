@@ -1,5 +1,3 @@
-// /events/messageCreate.js
-
 const { Events, EmbedBuilder } = require("discord.js");
 
 async function handleLeveling(message) {
@@ -108,8 +106,6 @@ module.exports = {
       return;
     }
 
-    // --- NEW CODE - LEVELING SYSTEM ---
-    // The call to the function goes here, after the AFK return check.
     await handleLeveling(message);
 
     // --- EXISTING CODE - AFK SYSTEM ---

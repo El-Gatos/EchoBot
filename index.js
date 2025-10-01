@@ -81,5 +81,4 @@ setInterval(async () => {
   });
 }, GIVEAWAY_CHECK_INTERVAL);
 
-// Log in to Discord with your client's token
 client.login(token);

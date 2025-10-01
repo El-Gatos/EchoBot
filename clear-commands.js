@@ -5,7 +5,6 @@ const { clientId, guildId, token } = require("./config.json");
 
 const rest = new REST().setToken(token);
 
-// This is the important part: we send an empty array for the body.
 console.log("Started clearing all application (/) commands for this server.");
 rest
   .put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })

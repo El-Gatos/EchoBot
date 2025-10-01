@@ -5,7 +5,6 @@ module.exports = {
     .setName("fox")
     .setDescription("Replies with a random fox picture!"),
   async execute(interaction) {
-    // We'll use a try...catch block to handle potential errors
     try {
       // Make a request to the RandomFox API
       const response = await fetch("https://randomfox.ca/floof/");

@@ -15,7 +15,7 @@ module.exports = {
           state: "Chasing mice...",
         },
       ],
-      status: "dnd", // Can be 'online', 'idle', or 'dnd' (do not disturb)
+      status: "dnd",
     });
   },
 };

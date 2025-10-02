@@ -187,7 +187,7 @@ module.exports = {
 
 // --- Helper Functions for PvP ---
 async function promptPlayers(client, gameId) {
-  const game = activeGames.get(gameId);
+  const game = client.activeGames.get(gameId);
   if (!game) return;
 
   const moveRow = new ActionRowBuilder();

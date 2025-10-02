@@ -26,39 +26,42 @@ const wins = {
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
-    // --- Slash Command Handling ---
+    // 1. --- Slash Command Handling ---
     if (interaction.isChatInputCommand()) {
-      const command = interaction.client.commands.get(interaction.commandName);
-
-      if (!command) {
-        console.error(
-          `No command matching ${interaction.commandName} was found.`
+      if (interaction.isChatInputCommand()) {
+        const command = interaction.client.commands.get(
+          interaction.commandName
         );
-        return;
-      }
 
-      try {
-        // Check for the new isPublic property
-        if (command.isPublic) {
-          await interaction.deferReply(); // Defer publicly
-        } else {
-          await interaction.deferReply({ flags: MessageFlags.Ephemeral }); // Defer ephemerally (default)
+        if (!command) {
+          console.error(
+            `No command matching ${interaction.commandName} was found.`
+          );
+          return;
         }
 
-        await command.execute(interaction);
-      } catch (error) {
-        console.error(`Error executing ${interaction.commandName}`);
-        console.error(error);
+        try {
+          // Check for the new isPublic property
+          if (command.isPublic) {
+            await interaction.deferReply(); // Defer publicly
+          } else {
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral }); // Defer ephemerally (default)
+          }
 
-        if (interaction.deferred || interaction.replied) {
-          await interaction.editReply({
-            content: "There was an error while executing this command!",
-          });
+          await command.execute(interaction);
+        } catch (error) {
+          console.error(`Error executing ${interaction.commandName}`);
+          console.error(error);
+
+          if (interaction.deferred || interaction.replied) {
+            await interaction.editReply({
+              content: "There was an error while executing this command!",
+            });
+          }
         }
       }
     }
-
-    // --- Button Handling ---
+    // 2. --- Button Handling ---
     else if (interaction.isButton()) {
       // --- Role Menu Button Logic ---
       if (interaction.customId.startsWith("rolemenu_")) {
@@ -138,160 +141,39 @@ module.exports = {
           }
           interaction.client.activeGames.delete(gameId);
         }
-      } // --- Ticket System Button Logic (CORRECTED) ---
-      if (interaction.customId.startsWith("ticket_")) {
-        if (interaction.customId === "ticket_create") {
-          // --- NEW: Show the Modal instead of creating a channel ---
-          const ticketModal = new ModalBuilder()
-            .setCustomId("ticket_modal")
-            .setTitle("Create a Support Ticket");
+      }
+      // --- Ticket Creation Button ---
+      else if (interaction.customId === "ticket_create") {
+        // This is where you show the modal.
+        const ticketModal = new ModalBuilder()
+          .setCustomId("ticket_modal")
+          .setTitle("Create a Support Ticket");
 
-          const subjectInput = new TextInputBuilder()
-            .setCustomId("ticket_subject")
-            .setLabel("What is the subject of your ticket?")
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder("e.g., Report a User, Question about leveling")
-            .setRequired(true);
+        const subjectInput = new TextInputBuilder()
+          .setCustomId("ticket_subject")
+          .setLabel("What is the subject of your ticket?")
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder("e.g., Report a User, Question about leveling")
+          .setRequired(true);
 
-          const descriptionInput = new TextInputBuilder()
-            .setCustomId("ticket_description")
-            .setLabel("Please describe your issue in detail.")
-            .setStyle(TextInputStyle.Paragraph)
-            .setRequired(true);
+        const descriptionInput = new TextInputBuilder()
+          .setCustomId("ticket_description")
+          .setLabel("Please describe your issue in detail.")
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true);
 
-          const firstActionRow = new ActionRowBuilder().addComponents(
-            subjectInput
-          );
-          const secondActionRow = new ActionRowBuilder().addComponents(
-            descriptionInput
-          );
+        const firstActionRow = new ActionRowBuilder().addComponents(
+          subjectInput
+        );
+        const secondActionRow = new ActionRowBuilder().addComponents(
+          descriptionInput
+        );
 
-          ticketModal.addComponents(firstActionRow, secondActionRow);
-          await interaction.showModal(ticketModal);
-        } else if (interaction.isModalSubmit()) {
-          if (interaction.customId === "ticket_modal") {
-            await interaction.deferReply({ ephemeral: true });
-
-            const subject =
-              interaction.fields.getTextInputValue("ticket_subject");
-            const description =
-              interaction.fields.getTextInputValue("ticket_description");
-
-            const db = interaction.client.db;
-            const configRef = db
-              .collection("guilds")
-              .doc(interaction.guild.id)
-              .collection("config")
-              .doc("tickets");
-            const configDoc = await configRef.get();
-            if (!configDoc.exists) {
-              return interaction.editReply(
-                "The ticket system has not been configured."
-              );
-            }
-
-            const { categoryId, supportRoleId } = configDoc.data();
-            const category = await interaction.guild.channels.fetch(categoryId);
-            const supportRole = await interaction.guild.roles.fetch(
-              supportRoleId
-            );
-
-            const ticketChannel = await interaction.guild.channels.create({
-              name: `ticket-${subject.slice(0, 20)}`,
-              type: ChannelType.GuildText,
-              parent: category,
-              permissionOverwrites: [
-                {
-                  id: interaction.guild.roles.everyone,
-                  deny: [PermissionsBitField.Flags.ViewChannel],
-                },
-                {
-                  id: interaction.user.id,
-                  allow: [
-                    PermissionsBitField.Flags.ViewChannel,
-                    PermissionsBitField.Flags.SendMessages,
-                  ],
-                },
-                {
-                  id: supportRole.id,
-                  allow: [
-                    PermissionsBitField.Flags.ViewChannel,
-                    PermissionsBitField.Flags.SendMessages,
-                  ],
-                },
-              ],
-            });
-
-            await interaction.editReply(
-              `✅ Your ticket has been created: ${ticketChannel}`
-            );
-
-            const ticketEmbed = new EmbedBuilder()
-              .setColor("Green")
-              .setAuthor({
-                name: interaction.user.tag,
-                iconURL: interaction.user.displayAvatarURL(),
-              })
-              .setTitle(subject)
-              .setDescription(description)
-              .setTimestamp();
-
-            const ticketControls = new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setCustomId("ticket_claim")
-                .setLabel("Claim Ticket")
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji("🙋"),
-              new ButtonBuilder()
-                .setCustomId("ticket_close")
-                .setLabel("Close Ticket")
-                .setStyle(ButtonStyle.Danger)
-                .setEmoji("🔒")
-            );
-
-            await ticketChannel.send({
-              content: `${interaction.user} ${supportRole}`,
-              embeds: [ticketEmbed],
-              components: [ticketControls],
-            });
-          }
-
-          await interaction.editReply(
-            `✅ Your ticket has been created: ${ticketChannel}`
-          );
-
-          const ticketEmbed = new EmbedBuilder()
-            .setColor("Green")
-            .setAuthor({
-              name: interaction.user.tag,
-              iconURL: interaction.user.displayAvatarURL(),
-            })
-            .setTitle(subject)
-            .setDescription(description)
-            .setTimestamp();
-
-          const ticketControls = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId("ticket_claim")
-              .setLabel("Claim Ticket")
-              .setStyle(ButtonStyle.Primary)
-              .setEmoji("🙋"),
-            new ButtonBuilder()
-              .setCustomId("ticket_close")
-              .setLabel("Close Ticket")
-              .setStyle(ButtonStyle.Danger)
-              .setEmoji("🔒")
-          );
-
-          await ticketChannel.send({
-            content: `${interaction.user} ${supportRole}`,
-            embeds: [ticketEmbed],
-            components: [ticketControls],
-          });
-        }
+        ticketModal.addComponents(firstActionRow, secondActionRow);
+        await interaction.showModal(ticketModal);
       }
 
-      // --- Handle Ticket Claiming ---
+      // --- Ticket Claiming Button ---
       else if (interaction.customId === "ticket_claim") {
         if (
           !interaction.member.permissions.has(
@@ -325,7 +207,8 @@ module.exports = {
           components: [disabledButtons],
         });
       }
-      // --- Handle Initial Close Request ---
+
+      // --- Ticket Close Button ---
       else if (interaction.customId === "ticket_close") {
         if (
           !interaction.member.permissions.has(
@@ -357,7 +240,8 @@ module.exports = {
           flags: MessageFlags.Ephemeral,
         });
       }
-      // --- Handle Close Confirmation ---
+
+      // --- Ticket Close Confirmation Button ---
       else if (interaction.customId === "ticket_close_confirm") {
         if (
           !interaction.member.permissions.has(
@@ -380,82 +264,166 @@ module.exports = {
       else if (interaction.customId === "ticket_close_cancel") {
         await interaction.message.delete();
       }
-    }
 
-    // --- XP Reset Confirmation Button Logic ---
-    else if (interaction.customId.startsWith("xpreset_")) {
-      if (
-        !interaction.member.permissions.has(
-          PermissionsBitField.Flags.Administrator
-        )
-      ) {
-        return interaction.reply({
-          content: "Only an administrator can confirm this action.",
-          flags: MessageFlags.Ephemeral,
-        });
-      }
-
-      const action = interaction.customId.split("_")[1];
-
-      const disabledRow = ActionRowBuilder.from(
-        interaction.message.components[0]
-      ).setComponents(
-        interaction.message.components[0].components.map((c) =>
-          ButtonBuilder.from(c).setDisabled(true)
-        )
-      );
-
-      if (action === "cancel") {
-        // Acknowledge the interaction and edit the original message in one step.
-        return interaction.update({
-          content: "XP reset has been cancelled.",
-          embeds: [],
-          components: [disabledRow],
-        });
-      }
-
-      if (action === "confirm") {
-        // Acknowledge the interaction and update the message to show work is in progress.
-        await interaction.update({
-          content: "Resetting all user XP... This may take a moment.",
-          embeds: [],
-          components: [disabledRow],
-        });
-
-        const db = interaction.client.db;
-        const levelsRef = db
-          .collection("guilds")
-          .doc(interaction.guild.id)
-          .collection("levels");
-
-        try {
-          const snapshot = await levelsRef.get();
-          if (snapshot.empty) {
-            // Use followUp because already replied with update()
-            return interaction.followUp({
-              content: "There was no XP data to reset.",
-              flags: MessageFlags.Ephemeral,
-            });
-          }
-
-          const batch = db.batch();
-          snapshot.docs.forEach((doc) => {
-            batch.delete(doc.ref);
-          });
-          await batch.commit();
-
-          await interaction.followUp({
-            content:
-              "✅ All XP and levels for this server have been successfully reset.",
-            flags: MessageFlags.Ephemeral,
-          });
-        } catch (error) {
-          console.error("Error resetting XP:", error);
-          await interaction.followUp({
-            content: "An error occurred while trying to reset the data.",
+      // --- XP Reset Confirmation Button Logic (MOVED HERE) ---
+      else if (interaction.customId.startsWith("xpreset_")) {
+        if (
+          !interaction.member.permissions.has(
+            PermissionsBitField.Flags.Administrator
+          )
+        ) {
+          return interaction.reply({
+            content: "Only an administrator can confirm this action.",
             flags: MessageFlags.Ephemeral,
           });
         }
+
+        const action = interaction.customId.split("_")[1];
+
+        const disabledRow = ActionRowBuilder.from(
+          interaction.message.components[0]
+        ).setComponents(
+          interaction.message.components[0].components.map((c) =>
+            ButtonBuilder.from(c).setDisabled(true)
+          )
+        );
+
+        if (action === "cancel") {
+          // Acknowledge the interaction and edit the original message in one step.
+          return interaction.update({
+            content: "XP reset has been cancelled.",
+            embeds: [],
+            components: [disabledRow],
+          });
+        }
+
+        if (action === "confirm") {
+          // Acknowledge the interaction and update the message to show work is in progress.
+          await interaction.update({
+            content: "Resetting all user XP... This may take a moment.",
+            embeds: [],
+            components: [disabledRow],
+          });
+
+          const db = interaction.client.db;
+          const levelsRef = db
+            .collection("guilds")
+            .doc(interaction.guild.id)
+            .collection("levels");
+
+          try {
+            const snapshot = await levelsRef.get();
+            if (snapshot.empty) {
+              // Use followUp because already replied with update()
+              return interaction.followUp({
+                content: "There was no XP data to reset.",
+                flags: MessageFlags.Ephemeral,
+              });
+            }
+
+            const batch = db.batch();
+            snapshot.docs.forEach((doc) => {
+              batch.delete(doc.ref);
+            });
+            await batch.commit();
+
+            await interaction.followUp({
+              content:
+                "✅ All XP and levels for this server have been successfully reset.",
+              flags: MessageFlags.Ephemeral,
+            });
+          } catch (error) {
+            console.error("Error resetting XP:", error);
+            await interaction.followUp({
+              content: "An error occurred while trying to reset the data.",
+              flags: MessageFlags.Ephemeral,
+            });
+          }
+        }
+      }
+    }
+    // 3. --- Modal Submission Handling (NEW TOP-LEVEL BLOCK) ---
+    else if (interaction.isModalSubmit()) {
+      if (interaction.customId === "ticket_modal") {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+        const subject = interaction.fields.getTextInputValue("ticket_subject");
+        const description =
+          interaction.fields.getTextInputValue("ticket_description");
+
+        const db = interaction.client.db;
+        const configRef = db
+          .collection("guilds")
+          .doc(interaction.guild.id)
+          .collection("config")
+          .doc("tickets");
+        const configDoc = await configRef.get();
+        if (!configDoc.exists) {
+          return interaction.editReply(
+            "The ticket system has not been configured."
+          );
+        }
+
+        const { categoryId, supportRoleId } = configDoc.data();
+        const category = await interaction.guild.channels.fetch(categoryId);
+        const supportRole = await interaction.guild.roles.fetch(supportRoleId);
+
+        const ticketChannel = await interaction.guild.channels.create({
+          name: `ticket-${subject.slice(0, 20)}`,
+          type: ChannelType.GuildText,
+          parent: category,
+          permissionOverwrites: [
+            {
+              id: interaction.guild.roles.everyone,
+              deny: [PermissionsBitField.Flags.ViewChannel],
+            },
+            {
+              id: interaction.user.id,
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+              ],
+            },
+            {
+              id: supportRole.id,
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+              ],
+            },
+          ],
+        });
+
+        await interaction.editReply(
+          `✅ Your ticket has been created: ${ticketChannel}`
+        );
+
+        const ticketEmbed = new EmbedBuilder()
+          .setColor("Green")
+          .setAuthor({
+            name: interaction.user.tag,
+            iconURL: interaction.user.displayAvatarURL(),
+          })
+          .setTitle(subject)
+          .setDescription(description)
+          .setTimestamp();
+        const ticketControls = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("ticket_claim")
+            .setLabel("Claim Ticket")
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji("🙋"),
+          new ButtonBuilder()
+            .setCustomId("ticket_close")
+            .setLabel("Close Ticket")
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji("🔒")
+        );
+        await ticketChannel.send({
+          content: `${interaction.user} ${supportRole}`,
+          embeds: [ticketEmbed],
+          components: [ticketControls],
+        });
       }
     }
   },

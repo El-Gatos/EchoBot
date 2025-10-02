@@ -144,7 +144,6 @@ module.exports = {
       }
       // --- Ticket Creation Button ---
       else if (interaction.customId === "ticket_create") {
-        // This is where you show the modal.
         const ticketModal = new ModalBuilder()
           .setCustomId("ticket_modal")
           .setTitle("Create a Support Ticket");
@@ -265,7 +264,7 @@ module.exports = {
         await interaction.message.delete();
       }
 
-      // --- XP Reset Confirmation Button Logic (MOVED HERE) ---
+      // --- XP Reset Confirmation Button Logic ---
       else if (interaction.customId.startsWith("xpreset_")) {
         if (
           !interaction.member.permissions.has(

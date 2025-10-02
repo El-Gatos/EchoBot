@@ -5,6 +5,8 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   PermissionsBitField,
+  ChannelType,
+  ButtonStyle,
 } = require("discord.js");
 
 const { getXpForLevel } = require("../utils/levelingUtil.js");
@@ -134,6 +136,177 @@ module.exports = {
             await channel.send({ embeds: [resultEmbed] });
           }
           interaction.client.activeGames.delete(gameId);
+        }
+      } // --- Ticket System Button Logic (CORRECTED) ---
+      else if (interaction.customId.startsWith("ticket_")) {
+        const db = interaction.client.db;
+
+        // --- Handle Ticket Creation ---
+        if (interaction.customId === "ticket_create") {
+          await interaction.deferReply({ ephemeral: true });
+
+          const configRef = db
+            .collection("guilds")
+            .doc(interaction.guild.id)
+            .collection("config")
+            .doc("tickets");
+          const configDoc = await configRef.get();
+          if (!configDoc.exists) {
+            return interaction.editReply(
+              "The ticket system has not been configured for this server."
+            );
+          }
+
+          const { categoryId, supportRoleId } = configDoc.data();
+          const category = await interaction.guild.channels.fetch(categoryId);
+          const supportRole = await interaction.guild.roles.fetch(
+            supportRoleId
+          );
+
+          const ticketChannel = await interaction.guild.channels.create({
+            name: `ticket-${interaction.user.username}`,
+            type: ChannelType.GuildText,
+            parent: category,
+            permissionOverwrites: [
+              {
+                id: interaction.guild.roles.everyone,
+                deny: [PermissionsBitField.Flags.ViewChannel],
+              },
+              {
+                id: interaction.user.id,
+                allow: [
+                  PermissionsBitField.Flags.ViewChannel,
+                  PermissionsBitField.Flags.SendMessages,
+                ],
+              },
+              {
+                id: supportRole.id,
+                allow: [
+                  PermissionsBitField.Flags.ViewChannel,
+                  PermissionsBitField.Flags.SendMessages,
+                ],
+              },
+            ],
+          });
+
+          await interaction.editReply(
+            `✅ Your ticket has been created: ${ticketChannel}`
+          );
+
+          const ticketEmbed = new EmbedBuilder()
+            .setColor("Green")
+            .setTitle(`Ticket for ${interaction.user.username}`)
+            .setDescription(
+              "Please describe your issue, and a staff member will be with you shortly."
+            );
+
+          const ticketControls = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId("ticket_claim")
+              .setLabel("Claim Ticket")
+              .setStyle(ButtonStyle.Primary)
+              .setEmoji("🙋"),
+            new ButtonBuilder()
+              .setCustomId("ticket_close")
+              .setLabel("Close Ticket")
+              .setStyle(ButtonStyle.Danger)
+              .setEmoji("🔒")
+          );
+
+          await ticketChannel.send({
+            content: `${supportRole}`,
+            embeds: [ticketEmbed],
+            components: [ticketControls],
+          });
+        }
+        // --- Handle Ticket Claiming ---
+        else if (interaction.customId === "ticket_claim") {
+          if (
+            !interaction.member.permissions.has(
+              PermissionsBitField.Flags.ModerateMembers
+            )
+          ) {
+            return interaction.reply({
+              content: "Only support staff can claim tickets.",
+              ephemeral: true,
+            });
+          }
+          await interaction.deferUpdate();
+
+          const originalEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+            .setColor("Yellow")
+            .addFields({ name: "Claimed by", value: `${interaction.user}` });
+
+          const disabledButtons = ActionRowBuilder.from(
+            interaction.message.components[0]
+          ).setComponents(
+            new ButtonBuilder()
+              .setCustomId("ticket_claim")
+              .setLabel("Claimed")
+              .setStyle(ButtonStyle.Secondary)
+              .setDisabled(true),
+            ButtonBuilder.from(interaction.message.components[0].components[1])
+          );
+
+          await interaction.message.edit({
+            embeds: [originalEmbed],
+            components: [disabledButtons],
+          });
+        }
+        // --- Handle Initial Close Request ---
+        else if (interaction.customId === "ticket_close") {
+          if (
+            !interaction.member.permissions.has(
+              PermissionsBitField.Flags.Administrator
+            )
+          ) {
+            return interaction.reply({
+              content: "You must be an administrator to close this ticket.",
+              ephemeral: true,
+            });
+          }
+          const confirmEmbed = new EmbedBuilder()
+            .setColor("Red")
+            .setDescription("Are you sure you want to close this ticket?");
+          const confirmButtons = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId("ticket_close_confirm")
+              .setLabel("Yes, close it")
+              .setStyle(ButtonStyle.Danger),
+            new ButtonBuilder()
+              .setCustomId("ticket_close_cancel")
+              .setLabel("Cancel")
+              .setStyle(ButtonStyle.Secondary)
+          );
+
+          await interaction.reply({
+            embeds: [confirmEmbed],
+            components: [confirmButtons],
+            ephemeral: true,
+          });
+        }
+        // --- Handle Close Confirmation ---
+        else if (interaction.customId === "ticket_close_confirm") {
+          if (
+            !interaction.member.permissions.has(
+              PermissionsBitField.Flags.Administrator
+            )
+          ) {
+            return;
+          }
+          await interaction.update({
+            content: "Closing ticket in 5 seconds...",
+            components: [],
+            embeds: [],
+          });
+          setTimeout(
+            () => interaction.channel.delete("Ticket closed by user."),
+            5000
+          );
+        }
+        // --- Handle Close Cancellation ---
+        else if (interaction.customId === "ticket_close_cancel") {
+          await interaction.message.delete();
         }
       }
 

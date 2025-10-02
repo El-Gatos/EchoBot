@@ -1,4 +1,5 @@
 const { Events, EmbedBuilder } = require("discord.js");
+const { getXpForLevel } = require("../utils/levelingUtil.js");
 
 async function handleLeveling(message) {
   const db = message.client.db;

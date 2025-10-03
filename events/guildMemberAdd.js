@@ -89,22 +89,35 @@ module.exports = {
     if (!antiRaid.enabled || member.guild.id !== antiRaid.guildId) return;
 
     const guildId = member.guild.id;
-    const client = member.client; // Get the client from the member object
+    const client = member.client;
 
-    // Ignore if lockdown is already active for guild
     if (lockdownActive.has(guildId)) {
+      // If lockdown is active, new members are kicked immediately.
+      try {
+        await member.kick("Automatic lockdown due to suspected raid.");
+      } catch (error) {
+        console.error(
+          `[Anti-Raid] Failed to kick ${member.user.tag} during lockdown.`
+        );
+      }
       return;
     }
 
     const now = Date.now();
-    const joinTimes = recentJoins.get(guildId) || [];
+    // Get the list of recent joiners for this guild.
+    // Each item in the list is now an object: { id: '...', timestamp: ... }
+    const joinList = recentJoins.get(guildId) || [];
 
-    const recent = joinTimes.filter(
-      (time) => now - time < antiRaid.timeInterval
+    // Filter out joins that are older than the configured time interval.
+    const recent = joinList.filter(
+      (join) => now - join.timestamp < antiRaid.timeInterval
     );
-    recent.push(now);
+
+    // Add the new member to the list.
+    recent.push({ id: member.id, timestamp: now });
     recentJoins.set(guildId, recent);
 
+    // Check if the number of recent joins exceeds the threshold.
     if (recent.length >= antiRaid.joinThreshold) {
       lockdownActive.add(guildId);
       console.log(
@@ -128,31 +141,31 @@ module.exports = {
       }
 
       // Kick the suspicious members
-      const membersToKick = await member.guild.members.fetch({
-        query: "",
-        limit: recent.length,
-      });
-      const recentMemberIds = membersToKick
-        .filter((m) => recent.includes(m.joinedTimestamp))
-        .map((m) => m.id);
+      const membersToKickIds = recent.map((join) => join.id);
 
-      for (const id of recentMemberIds) {
-        const memberToKick = await member.guild.members.fetch(id);
-        if (memberToKick) {
-          await memberToKick.kick("Automatic raid detection.");
+      for (const id of membersToKickIds) {
+        try {
+          const memberToKick = await member.guild.members.fetch(id);
+          if (memberToKick) {
+            await memberToKick.kick("Automatic raid detection.");
+          }
+        } catch (error) {
+          console.error(`[Anti-Raid] Could not kick member ${id}:`, error);
         }
       }
 
-      // End the lockdown after a set time
+      // Clear the recent joins list for this guild now that they've been kicked.
+      recentJoins.set(guildId, []);
+
+      // End the lockdown after a set time.
       setTimeout(() => {
         lockdownActive.delete(guildId);
-        recentJoins.set(guildId, []);
         if (logChannel) {
           const embed = new EmbedBuilder()
             .setColor("Green")
             .setTitle("✅ Lockdown Lifted")
             .setDescription(
-              "Server lockdown has ended. Normal operations have resumed."
+              "Server lockdown has ended. New members can join again."
             )
             .setTimestamp();
           logChannel.send({ embeds: [embed] });

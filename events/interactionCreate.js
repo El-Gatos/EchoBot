@@ -93,6 +93,85 @@ module.exports = {
         }
       }
 
+      if (interaction.customId.startsWith("vccontrol_")) {
+        const [_, action, channelId] = interaction.customId.split("_");
+
+        const tempChannelRef = db
+          .collection("guilds")
+          .doc(guild.id)
+          .collection("tempChannels")
+          .doc(channelId);
+        const tempChannelDoc = await tempChannelRef.get();
+
+        if (
+          !tempChannelDoc.exists ||
+          tempChannelDoc.data().ownerId !== interaction.user.id
+        ) {
+          return interaction.reply({
+            content: "You are not the owner of this temporary channel.",
+            ephemeral: true,
+          });
+        }
+
+        const channel = await guild.channels.fetch(channelId).catch(() => null);
+        if (!channel) {
+          return interaction.reply({
+            content: "This temporary channel no longer exists.",
+            ephemeral: true,
+          });
+        }
+
+        switch (action) {
+          case "lock": {
+            const isLocked = channel.permissionOverwrites.cache.has(
+              guild.roles.everyone.id
+            );
+            await channel.permissionOverwrites.edit(guild.roles.everyone, {
+              Connect: isLocked ? null : false,
+            });
+            await interaction.reply({
+              content: `Channel has been **${
+                isLocked ? "unlocked" : "locked"
+              }**.`,
+              ephemeral: true,
+            });
+            break;
+          }
+          case "rename": {
+            const modal = new ModalBuilder()
+              .setCustomId(`vcmodal_rename_${channelId}`)
+              .setTitle("Rename Your Channel")
+              .addComponents(
+                new ActionRowBuilder().addComponents(
+                  new TextInputBuilder()
+                    .setCustomId("name")
+                    .setLabel("New Channel Name")
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true)
+                )
+              );
+            await interaction.showModal(modal);
+            break;
+          }
+          case "limit": {
+            const modal = new ModalBuilder()
+              .setCustomId(`vcmodal_limit_${channelId}`)
+              .setTitle("Set User Limit")
+              .addComponents(
+                new ActionRowBuilder().addComponents(
+                  new TextInputBuilder()
+                    .setCustomId("limit")
+                    .setLabel("User Limit (0 for unlimited)")
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true)
+                )
+              );
+            await interaction.showModal(modal);
+            break;
+          }
+        }
+      }
+
       // --- RPS Game Move Button Logic ---
       else if (interaction.customId.startsWith("rps-move_")) {
         const [_, gameId, move] = interaction.customId.split("_");

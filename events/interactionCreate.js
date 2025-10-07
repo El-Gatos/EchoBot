@@ -26,6 +26,9 @@ const wins = {
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
+    const db = interaction.client.db;
+    const guild = interaction.guild;
+
     // 1. --- Slash Command Handling ---
     if (interaction.isChatInputCommand()) {
       if (interaction.isChatInputCommand()) {
@@ -109,7 +112,7 @@ module.exports = {
         ) {
           return interaction.reply({
             content: "You are not the owner of this temporary channel.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -117,7 +120,7 @@ module.exports = {
         if (!channel) {
           return interaction.reply({
             content: "This temporary channel no longer exists.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -133,7 +136,7 @@ module.exports = {
               content: `Channel has been **${
                 isLocked ? "unlocked" : "locked"
               }**.`,
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
             break;
           }
@@ -430,7 +433,6 @@ module.exports = {
         const description =
           interaction.fields.getTextInputValue("ticket_description");
 
-        const db = interaction.client.db;
         const configRef = db
           .collection("guilds")
           .doc(interaction.guild.id)
@@ -520,7 +522,7 @@ module.exports = {
         ) {
           return interaction.reply({
             content: "You do not have permission to modify this channel.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -528,7 +530,7 @@ module.exports = {
         if (!channel) {
           return interaction.reply({
             content: "This channel no longer exists.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -537,7 +539,7 @@ module.exports = {
           await channel.setName(newName);
           await interaction.reply({
             content: `Channel has been renamed to **${newName}**.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -548,7 +550,7 @@ module.exports = {
           if (isNaN(newLimit) || newLimit < 0 || newLimit > 99) {
             return interaction.reply({
               content: "Please enter a valid number between 0 and 99.",
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
           }
           await channel.setUserLimit(newLimit);
@@ -556,7 +558,7 @@ module.exports = {
             content: `Channel user limit set to **${
               newLimit === 0 ? "Unlimited" : newLimit
             }**.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
       }

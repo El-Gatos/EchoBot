@@ -4,48 +4,32 @@ const { recordAction } = require("../utils/antiNukeManager");
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 module.exports = {
-  name: Events.RoleDelete,
-  async execute(role, client) {
-    if (!role.guild) return;
-    console.log(
-      `[Anti-Nuke] Detected role delete for "${role.name}" in "${role.guild.name}".`
-    );
-
+  name: Events.GuildBanAdd,
+  async execute(ban) {
+    const { client } = ban;
     try {
       await sleep(1000);
 
-      const auditLogs = await role.guild.fetchAuditLogs({
+      const auditLogs = await ban.guild.fetchAuditLogs({
         limit: 5,
-        type: AuditLogEvent.RoleDelete,
+        type: AuditLogEvent.MemberBanAdd,
       });
-
-      const deleteLog = auditLogs.entries.find(
-        (log) => log.target.id === role.id
+      const banLog = auditLogs.entries.find(
+        (log) => log.target.id === ban.user.id
       );
 
-      if (!deleteLog) {
-        console.log(
-          `[Anti-Nuke] No specific audit log found for role ${role.name}.`
-        );
+      if (!banLog) {
         return;
       }
 
-      const { executor } = deleteLog;
-      console.log(
-        `[Anti-Nuke] Found log: Executor ${executor.tag}, Target ${role.id}`
-      );
+      const { executor } = banLog;
 
-      if (Date.now() - deleteLog.createdTimestamp < 5000) {
-        console.log(
-          `[Anti-Nuke] Log confirmed. Recording action for ${executor.tag}.`
-        );
-        recordAction(role.guild, executor, "roleDeletes", client);
-      } else {
-        console.log("[Anti-Nuke] Log was too old.");
+      if (Date.now() - banLog.createdTimestamp < 5000) {
+        recordAction(ban.guild, executor, "memberBans", client);
       }
     } catch (error) {
       console.error(
-        "[Anti-Nuke] Could not fetch audit logs for role delete:",
+        "[Anti-Nuke] Could not fetch audit logs for member ban:",
         error
       );
     }

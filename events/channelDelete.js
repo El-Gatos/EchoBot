@@ -5,11 +5,10 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 module.exports = {
   name: Events.ChannelDelete,
-  async execute(channel, client) {
+  async execute(channel) {
     if (!channel.guild) return;
-    console.log(
-      `[Anti-Nuke] Detected channel delete for "${channel.name}" in "${channel.guild.name}".`
-    );
+
+    const { client } = channel;
 
     try {
       await sleep(1000);
@@ -24,26 +23,13 @@ module.exports = {
       );
 
       if (!deleteLog) {
-        console.log(
-          `[Anti-Nuke] No specific audit log found for channel ${channel.name}.`
-        );
         return;
       }
 
       const { executor } = deleteLog;
-      console.log(
-        `[Anti-Nuke] Found log: Executor ${executor.tag}, Target ${channel.id}`
-      );
 
       if (Date.now() - deleteLog.createdTimestamp < 5000) {
-        console.log(
-          `[Anti-Nuke] Log confirmed. Recording action for ${executor.tag}.`
-        );
-        // --- CORRECTED FUNCTION CALL ---
-        // We now pass the guild object and executor directly.
         recordAction(channel.guild, executor, "channelDeletes", client);
-      } else {
-        console.log("[Anti-Nuke] Log was too old.");
       }
     } catch (error) {
       console.error(

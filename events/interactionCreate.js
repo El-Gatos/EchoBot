@@ -64,6 +64,7 @@ module.exports = {
     // 2. --- Button Handling ---
     else if (interaction.isButton()) {
       // --- Role Menu Button Logic ---
+
       if (interaction.customId.startsWith("rolemenu_")) {
         try {
           await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -423,6 +424,62 @@ module.exports = {
           embeds: [ticketEmbed],
           components: [ticketControls],
         });
+      }
+      if (interaction.customId.startsWith("vcmodal_")) {
+        const [_, action, channelId] = interaction.customId.split("_");
+
+        const tempChannelRef = db
+          .collection("guilds")
+          .doc(guild.id)
+          .collection("tempChannels")
+          .doc(channelId);
+        const tempChannelDoc = await tempChannelRef.get();
+
+        if (
+          !tempChannelDoc.exists ||
+          tempChannelDoc.data().ownerId !== interaction.user.id
+        ) {
+          return interaction.reply({
+            content: "You do not have permission to modify this channel.",
+            ephemeral: true,
+          });
+        }
+
+        const channel = await guild.channels.fetch(channelId).catch(() => null);
+        if (!channel) {
+          return interaction.reply({
+            content: "This channel no longer exists.",
+            ephemeral: true,
+          });
+        }
+
+        if (action === "rename") {
+          const newName = interaction.fields.getTextInputValue("name");
+          await channel.setName(newName);
+          await interaction.reply({
+            content: `Channel has been renamed to **${newName}**.`,
+            ephemeral: true,
+          });
+        }
+
+        if (action === "limit") {
+          const newLimit = parseInt(
+            interaction.fields.getTextInputValue("limit")
+          );
+          if (isNaN(newLimit) || newLimit < 0 || newLimit > 99) {
+            return interaction.reply({
+              content: "Please enter a valid number between 0 and 99.",
+              ephemeral: true,
+            });
+          }
+          await channel.setUserLimit(newLimit);
+          await interaction.reply({
+            content: `Channel user limit set to **${
+              newLimit === 0 ? "Unlimited" : newLimit
+            }**.`,
+            ephemeral: true,
+          });
+        }
       }
     }
   },

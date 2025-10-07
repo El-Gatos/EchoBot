@@ -18,7 +18,6 @@ module.exports = {
         .setMaxValue(99)
     )
     .setDefaultMemberPermissions(PermissionsBitField.Flags.ManageMessages),
-  isPublic: true,
   async execute(interaction) {
     // Permission check
     if (

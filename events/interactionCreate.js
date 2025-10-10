@@ -332,6 +332,46 @@ module.exports = {
         ) {
           return;
         }
+
+        try {
+          const topic = interaction.channel.topic;
+          const creatorIdMatch = topic.match(/\((\d{17,19})\)/); // Regex to find the user ID in the topic
+
+          if (creatorIdMatch) {
+            const creatorId = creatorIdMatch[1];
+            const creator = await interaction.client.users.fetch(creatorId);
+
+            // Fetch up to 100 messages from the channel
+            const messages = await interaction.channel.messages.fetch({
+              limit: 100,
+            });
+            let transcript = `Transcript for ticket #${interaction.channel.name} in ${interaction.guild.name}\n\n`;
+
+            // Format messages in chronological order
+            messages.reverse().forEach((msg) => {
+              const timestamp = new Date(msg.createdTimestamp).toLocaleString();
+              transcript += `[${timestamp}] ${msg.author.tag}: ${msg.content}\n`;
+              if (msg.attachments.size > 0) {
+                transcript += `Attachments: ${msg.attachments
+                  .map((a) => a.url)
+                  .join(", ")}\n`;
+              }
+            });
+
+            // Send the transcript as a file
+            await creator.send({
+              content: `Here is the transcript for your recently closed ticket.`,
+              files: [
+                {
+                  attachment: Buffer.from(transcript),
+                  name: `transcript-${interaction.channel.name}.txt`,
+                },
+              ],
+            });
+          }
+        } catch (error) {
+          console.error("Failed to send ticket transcript:", error);
+        }
         await interaction.update({
           content: "Closing ticket in 5 seconds...",
           components: [],
@@ -453,6 +493,8 @@ module.exports = {
           name: `ticket-${subject.slice(0, 20)}`,
           type: ChannelType.GuildText,
           parent: category,
+          // ADD THIS LINE
+          topic: `Ticket for ${interaction.user.tag} (${interaction.user.id})`,
           permissionOverwrites: [
             {
               id: interaction.guild.roles.everyone,
